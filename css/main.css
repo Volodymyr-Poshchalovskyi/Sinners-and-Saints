@@ -238,17 +238,24 @@ ul, ol, li {
     height: 1rem;
     pointer-events: none;
 }
-
+/*
+  NOTE: This entire CSS block has been updated to fix layering and alignment issues.
+*/
 .preloader-text {
+  position: fixed;    
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10;        
+  padding-top: 9rem;     
   background-color: transparent;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
   text-align: center;
-  padding-top: 7.5rem;
 }
+
 
 .text {
   width: 90%;

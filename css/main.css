@@ -1108,6 +1108,13 @@ ul, ol, li {
   overflow: hidden;
 }
 
+#first-video-block {
+  margin-top: 137px;
+  height: calc(100vh - var(--header-h, 137px));
+}
+
+
+
 .video-block-fullscreen .content {
   position: absolute;
   top: 80%;
@@ -1370,7 +1377,7 @@ ul, ol, li {
   padding-top: 0;       /* reset */
 }
 
-:root { --header-h: 140px; } /* adjust if your fixed header height differs */
+:root { --header-h: 137px; } /* adjust if your fixed header height differs */
 
 .intro-preloader{
   position: fixed;

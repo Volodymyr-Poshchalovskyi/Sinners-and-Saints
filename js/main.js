@@ -1,375 +1,490 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const navContainer = document.querySelector(".nav-container");
-  const fullscreenVideo = document.getElementById("fullscreen-video");
-  const videoSource = document.getElementById("video-source");
-  const allVideos = Array.from(document.querySelectorAll(".video-preview"));
-  const expandButtons = document.querySelectorAll(".btn-see-more");
-  const muteButtons = document.querySelectorAll(".mute-toggle");
-  const navLinks = document.querySelectorAll(".nav a");
-  const indicator = document.querySelector(".nav-indicator");
-  const navElement = document.querySelector('.nav');
+/**
 
-  let lastScrollTop = 0;
-  let currentVideoIndex = 0;
-  let activeLink = null;
+* @file Головний скрипт для сайту.
 
-  // ===== VIDEO INTERSECTION OBSERVER (fullscreen only) =====
-  const fullscreenSections = document.querySelectorAll(".video-block-fullscreen");
+* @description Ініціалізує всі інтерактивні елементи: прелоадер, логіку скролу,
 
-  // Make sure videos don't start before intersection logic runs
-  fullscreenSections.forEach(section => {
-    const v = section.querySelector("video");
-    if (!v) return;
-    v.autoplay = false;     // override autoplay attribute
-    v.pause();
-    v.muted = true;         // keeps iOS happy
-    v.setAttribute("playsinline", ""); // iOS inline playback
-    v.setAttribute("preload", "auto");
-  });
+* відеоплеєри, вкладки та інші компоненти інтерфейсу.
 
-  const playOnlyThis = (videoEl) => {
-    document.querySelectorAll(".video-block-fullscreen video").forEach(v => {
-      if (v !== videoEl) v.pause();
-    });
-    videoEl.play().catch(() => { });
-  };
+* @author Your Name/Company
 
-  const fsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      const section = entry.target;
-      const video = section.querySelector("video");
-      if (!video) return;
+* @version 1.0.0
 
-      // Play when 75% or more is visible
-      if (entry.isIntersecting && entry.intersectionRatio >= 0.75) {
-        playOnlyThis(video);
-      } else {
-        video.pause();
-      }
-    });
-  }, {
-    root: null, threshold: [0.0, 0.75, 1.0] });
+*/
 
-  fullscreenSections.forEach(section => fsObserver.observe(section));
-
-  // ===== FULLSCREEN VIDEO FUNCTIONALITY =====
-  expandButtons.forEach((btn, index) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const dataSrc = btn.getAttribute("data-src");
-      if (dataSrc) {
-        const title = btn.getAttribute("data-title");
-        const director = btn.getAttribute("data-director");
-        window.location.href = `project-page.html?title=${encodeURIComponent(title)}&director=${encodeURIComponent(director)}`;
-      } else {
-        currentVideoIndex = index;
-        playFullscreenVideo(currentVideoIndex);
-      }
-    });
-  });
-
-  function playFullscreenVideo(index) {
-    if (fullscreenVideo && videoSource) {
-      const selectedVideo = allVideos[index];
-      const src = selectedVideo.querySelector("source").getAttribute("src");
-      videoSource.src = src;
-      fullscreenVideo.load();
-      fullscreenVideo.style.display = "block";
-      fullscreenVideo.muted = false;
-      fullscreenVideo.play();
-      fullscreenVideo.requestFullscreen?.();
-    }
-  }
-
-  if (fullscreenVideo) {
-    fullscreenVideo.addEventListener("ended", () => {
-      currentVideoIndex++;
-      if (currentVideoIndex < allVideos.length) {
-        playFullscreenVideo(currentVideoIndex);
-      } else {
-        exitFullscreenVideo();
-        currentVideoIndex = 0;
-      }
-    });
-  }
-
-  document.addEventListener("fullscreenchange", () => {
-    if (!document.fullscreenElement && fullscreenVideo) {
-      fullscreenVideo.pause();
-      fullscreenVideo.style.display = "none";
-    }
-  });
-
-  function exitFullscreenVideo() {
-    if (fullscreenVideo && videoSource) {
-      fullscreenVideo.pause();
-      fullscreenVideo.removeAttribute("src");
-      videoSource.removeAttribute("src");
-      fullscreenVideo.load();
-      fullscreenVideo.style.display = "none";
-      document.exitFullscreen?.();
-    }
-  }
-
-  // ===== MUTE TOGGLE =====
-  muteButtons.forEach(button => {
-    button.addEventListener("click", () => {
-      const video = button.parentElement.querySelector(".video-preview");
-      if (!video) return;
-      video.muted = !video.muted;
-      button.textContent = video.muted ? "🔈" : "🔊";
-    });
-  });
-
-  // ===== NAVIGATION INDICATOR FUNCTIONS =====
-  function moveIndicator(link) {
-    if (!link || !indicator) return;
-    const linkRect = link.getBoundingClientRect();
-    const navRect = link.closest('.nav').getBoundingClientRect();
-    indicator.style.width = linkRect.width + 'px';
-    indicator.style.left = (linkRect.left - navRect.left) + 'px';
-    indicator.classList.add('active');
-    activeLink = link;
-  }
-
-  function hideIndicator() {
-    if (indicator) {
-      indicator.classList.remove('active');
-    }
-    activeLink = null;
-  }
-
-  // ===== NAVIGATION HOVER HANDLERS =====
-  navLinks.forEach(link => {
-    link.addEventListener("mouseenter", () => {
-      moveIndicator(link);
-    });
-
-    link.addEventListener("mouseleave", () => {
-      hideIndicator();
-    });
-  });
-
-  if (navElement) {
-    navElement.addEventListener("mouseleave", () => {
-      hideIndicator();
-    });
-  }
-
-  // ===== HYBRID PAGE SPECIFIC FUNCTIONALITY =====
-  if (document.body.classList.contains("page-hybrids")) {
-    const header = document.querySelector(".header");
-    const sections = document.querySelectorAll(".video-block-fullscreen, .video-block-hybrid");
-
-    if (sections.length > 0) {
-      const progressContainer = document.createElement("div");
-      progressContainer.className = "video-progress";
-
-      const progressBar = document.createElement("div");
-      progressBar.className = "video-progress-bar";
-
-      const progressIndicator = document.createElement("div");
-      progressIndicator.className = "video-progress-indicator";
-      progressIndicator.textContent = "1 / " + sections.length;
-
-      progressContainer.appendChild(progressBar);
-      progressContainer.appendChild(progressIndicator);
-      document.body.appendChild(progressContainer);
-
-      progressContainer.addEventListener("click", (e) => {
-        const rect = progressContainer.getBoundingClientRect();
-        const clickY = e.clientY - rect.top;
-        const percentage = clickY / rect.height;
-        const targetIndex = Math.floor(percentage * sections.length);
-
-        if (sections[targetIndex]) {
-          const offset = sections[targetIndex].offsetTop;
-          window.scrollTo({ top: offset, behavior: "smooth" });
-        }
-      });
-
-      function updateProgress(activeIndex) {
-        const progress = ((activeIndex + 1) / sections.length) * 100;
-        progressBar.style.height = progress + "%";
-        progressIndicator.textContent = (activeIndex + 1) + " / " + sections.length;
-      }
-
-      function onScroll() {
-        let foundActive = false;
-        sections.forEach((section, index) => {
-          const rect = section.getBoundingClientRect();
-          const isVisible = rect.top <= window.innerHeight * 0.5 && rect.bottom >= window.innerHeight * 0.5;
-          if (isVisible && !foundActive) {
-            updateProgress(index);
-            foundActive = true;
-          }
-        });
-      }
-
-      window.addEventListener("scroll", () => {
-        const currentScroll = window.scrollY;
-
-        if (navContainer) {
-          navContainer.classList.toggle("hidden", currentScroll > lastScrollTop);
-        }
-
-        if (currentScroll > 10 && currentScroll > lastScrollTop) {
-          header.classList.add("logo-hidden");
-        } else if (currentScroll < lastScrollTop || currentScroll <= 0) {
-          header.classList.remove("logo-hidden");
-        }
-
-        lastScrollTop = currentScroll;
-        onScroll();
-      });
-
-      onScroll();
-    }
-  }
-
-  // ===== PROGRESS BAR FOR OTHER PAGES =====
-  if (document.body.classList.contains("page-progress")) {
-    const sections = document.querySelectorAll(".video-block, .video-block-fullscreen");
-
-    if (sections.length > 1) {
-      const progressContainer = document.createElement("div");
-      progressContainer.className = "video-progress";
-
-      const progressBar = document.createElement("div");
-      progressBar.className = "video-progress-bar";
-
-      const progressIndicator = document.createElement("div");
-      progressIndicator.className = "video-progress-indicator";
-      progressIndicator.textContent = "1 / " + sections.length;
-
-      progressContainer.appendChild(progressBar);
-      progressContainer.appendChild(progressIndicator);
-      document.body.appendChild(progressContainer);
-
-      progressContainer.addEventListener("click", (e) => {
-        const rect = progressContainer.getBoundingClientRect();
-        const clickY = e.clientY - rect.top;
-        const percentage = clickY / rect.height;
-        const targetIndex = Math.floor(percentage * sections.length);
-
-        if (sections[targetIndex]) {
-          const offset = sections[targetIndex].offsetTop;
-          window.scrollTo({ top: offset, behavior: "smooth" });
-        }
-      });
-
-      function updateProgressOnly(activeIndex) {
-        const progress = ((activeIndex + 1) / sections.length) * 100;
-        progressBar.style.height = progress + "%";
-        progressIndicator.textContent = (activeIndex + 1) + " / " + sections.length;
-      }
-
-      function onScrollProgress() {
-        let foundActive = false;
-        sections.forEach((section, index) => {
-          const rect = section.getBoundingClientRect();
-          const isVisible = rect.top <= window.innerHeight * 0.5 && rect.bottom >= window.innerHeight * 0.5;
-          if (isVisible && !foundActive) {
-            updateProgressOnly(index);
-            foundActive = true;
-          }
-        });
-      }
-
-      window.addEventListener("scroll", () => {
-        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-
-        if (navContainer) {
-          navContainer.classList.toggle("hidden", currentScroll > lastScrollTop);
-        }
-
-        lastScrollTop = Math.max(0, currentScroll);
-        onScrollProgress();
-      });
-
-      onScrollProgress();
-    }
-  }
-});
-
-// ===== STUDIO TABS FUNCTIONALITY =====
 document.addEventListener('DOMContentLoaded', () => {
-  const tabs = document.querySelectorAll('.studio-tab');
-  const panels = document.querySelectorAll('.tab-panel');
+  /**
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const targetTab = tab.dataset.tab;
+* @namespace App
 
-      tabs.forEach(t => t.classList.remove('active'));
-      panels.forEach(p => p.classList.remove('active'));
+* @description Головний об'єкт, що містить всю логіку сайту.
 
-      tab.classList.add('active');
-      const panel = document.getElementById(targetTab);
-      if (panel) panel.classList.add('active');
-    });
-  });
-});
+*/
 
-document.addEventListener('DOMContentLoaded', function() {
-  const loginTabs = document.querySelectorAll('.login-tab');
-  const tabContents = document.querySelectorAll('.tab-content');
+  const App = {
+    /**
 
-  loginTabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      loginTabs.forEach(t => t.classList.remove('active'));
-      tabContents.forEach(content => content.classList.remove('active'));
+* @property {object} elements - Кешовані DOM-елементи для швидкого доступу.
 
-      this.classList.add('active');
+*/
 
-      const tabName = this.getAttribute('data-tab');
-      const targetContent = document.getElementById(tabName + '-content');
-      if (targetContent) {
-        targetContent.classList.add('active');
+    elements: {},
+
+    /**
+
+* @property {object} state - Стан додатку, наприклад, позиція скролу.
+
+*/
+
+    state: {
+      lastScrollTop: 0,
+    },
+
+    /**
+
+* Ініціалізує додаток: кешує елементи та запускає обробники.
+
+*/
+
+    init() {
+      this.cacheDomElements();
+
+      this.initPreloader();
+
+      this.initTabs();
+
+      this.bindEvents();
+    },
+
+    /**
+
+* Знаходить та зберігає посилання на всі необхідні DOM-елементи.
+
+*/
+
+    cacheDomElements() {
+      this.elements.body = document.body;
+
+      this.elements.header = document.querySelector('.header');
+
+      this.elements.navContainer = document.querySelector('.nav-container');
+
+      this.elements.introPreloader = document.querySelector('.intro-preloader');
+
+      this.elements.fullscreenSections = document.querySelectorAll(
+        '.video-block-fullscreen'
+      );
+
+      this.elements.muteButtons = document.querySelectorAll('.mute-toggle');
+
+      // Додайте інші елементи сюди, якщо потрібно
+    },
+
+    /**
+
+* Прив'язує всі основні обробники подій до елементів.
+
+*/
+
+    bindEvents() {
+      this.elements.muteButtons.forEach((button) => {
+        button.addEventListener('click', this.handleMuteToggle);
+      });
+    },
+
+    // ==========================================================================
+
+    // PRELOADER LOGIC
+
+    // ==========================================================================
+
+    /**
+
+* Керує анімацією та зникненням прелоадера.
+
+*/
+
+    initPreloader() {
+      const preloader = this.elements.introPreloader;
+
+      if (!preloader) {
+        // Якщо прелоадера немає, одразу активуємо залежні від нього функції
+
+        this.onPreloaderFinish();
+
+        return;
       }
-    });
-  });
-});
 
-// --- Intro Preloader: slide away after last word animates ---
-const introPre = document.querySelector(".intro-preloader");
-if (introPre) {
-  const words = introPre.querySelectorAll(".word");
+      this.elements.body.classList.add('preloader-active');
 
-  const getMaxDelayMs = () => {
-    let max = 0;
-    words.forEach(w => {
-      const d = (w.style.animationDelay || "0s").trim();
-      const ms = d.endsWith("ms") ? parseFloat(d) : parseFloat(d) * 1000;
-      if (!isNaN(ms)) max = Math.max(max, ms);
-    });
-    return max + 500;
+      const titleWords = preloader.querySelectorAll(
+        '.intro-preloader__title .word'
+      );
+
+      const subWords = preloader.querySelectorAll(
+        '.intro-preloader__sub .word'
+      );
+
+      const TARGET_DURATION = 2500; // Час на анімацію всіх слів
+
+      const WORD_FADE_IN_DURATION = 600; // Тривалість анімації одного слова
+
+      const POST_ANIMATION_DELAY = 10000; // Пауза після анімації слів
+
+      // Розрахунок затримки для слів, щоб вони з'являлись поступово
+
+      const calculateDelay = (collection) => {
+        const increment =
+          collection.length > 1
+            ? (TARGET_DURATION - WORD_FADE_IN_DURATION) /
+              (collection.length - 1)
+            : 0;
+
+        collection.forEach((word, index) => {
+          word.style.animationDelay = `${index * increment}ms`;
+        });
+      };
+
+      calculateDelay(titleWords);
+
+      calculateDelay(subWords);
+
+      // Ховаємо прелоадер після завершення всієї анімації
+
+      setTimeout(() => {
+        preloader.classList.add('is-done');
+      }, TARGET_DURATION + POST_ANIMATION_DELAY);
+
+      // Коли анімація зникнення завершилась, видаляємо прелоадер і запускаємо іншу логіку
+
+      preloader.addEventListener('transitionend', (e) => {
+        if (e.propertyName === 'transform') {
+          this.onPreloaderFinish();
+
+          preloader.remove();
+        }
+      });
+    },
+
+    /**
+
+* Виконується після зникнення прелоадера (або одразу, якщо його немає).
+
+*/
+
+    onPreloaderFinish() {
+      this.elements.body.classList.remove('preloader-active');
+
+      this.initScrollDependentLogic();
+
+      this.initVideoObserver();
+
+      // Автоматично запускаємо перше відео після прелоадера
+
+      const firstVideo = document.querySelector(
+        '#first-video-block .video-preview'
+      );
+
+      if (firstVideo) {
+        firstVideo
+          .play()
+          .catch((error) => console.log('Autoplay was prevented:', error));
+      }
+    },
+
+    // ==========================================================================
+
+    // SCROLL-DEPENDENT LOGIC
+
+    // ==========================================================================
+
+    /**
+
+* Ініціалізує всю логіку, яка залежить від прокрутки сторінки.
+
+*/
+
+    initScrollDependentLogic() {
+      if (this.elements.body.classList.contains('page-hybrids')) {
+        this.setupHybridsPageScroll();
+      }
+
+      // Тут можна додати 'else if' для інших сторінок
+    },
+
+    /**
+
+* Налаштовує специфічну логіку скролу для сторінки "Hybrids".
+
+*/
+
+    setupHybridsPageScroll() {
+        const sections = document.querySelectorAll(".video-block-fullscreen, .video-block-hybrid");
+        const progressElements = this.createProgressBar(sections.length);
+
+        const onScroll = () => {
+            const currentScroll = window.scrollY;
+
+            // 1. Оновлення прогрес-бару
+            this.updateProgressBar(sections, progressElements);
+
+            // 2. Логіка ховання/показу хедера
+            const scrollThreshold = 200;
+            const isScrollingDown = currentScroll > this.state.lastScrollTop;
+
+            if (this.elements.header) {
+                const shouldHide = currentScroll > scrollThreshold && isScrollingDown;
+                
+                this.elements.header.classList.toggle("header--hidden", shouldHide);
+                
+                if (this.elements.navContainer) {
+                    // Цей рядок також можна оновити або видалити...
+                    this.elements.navContainer.classList.toggle("hidden", shouldHide);
+                }
+            }
+
+            this.state.lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+        };
+
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll(); 
+    },
+
+    /**
+
+* Створює та додає на сторінку елементи прогрес-бару.
+
+* @param {number} totalSections - Загальна кількість секцій.
+
+* @returns {object|null} Об'єкт з елементами прогрес-бару або null.
+
+*/
+
+    createProgressBar(totalSections) {
+      if (totalSections <= 0) return null;
+
+      const container = document.createElement('div');
+
+      container.className = 'video-progress';
+
+      const bar = document.createElement('div');
+
+      bar.className = 'video-progress-bar';
+
+      const indicator = document.createElement('div');
+
+      indicator.className = 'video-progress-indicator';
+
+      indicator.textContent = `1 / ${totalSections}`;
+
+      container.append(bar, indicator);
+
+      this.elements.body.appendChild(container);
+
+      container.addEventListener('click', (e) => {
+        const rect = container.getBoundingClientRect();
+
+        const clickY = e.clientY - rect.top;
+
+        const percentage = clickY / rect.height;
+
+        const targetIndex = Math.floor(percentage * totalSections);
+
+        const sections = document.querySelectorAll(
+          '.video-block-fullscreen, .video-block-hybrid'
+        );
+
+        if (sections[targetIndex]) {
+          window.scrollTo({
+            top: sections[targetIndex].offsetTop,
+            behavior: 'smooth',
+          });
+        }
+      });
+
+      return { bar, indicator };
+    },
+
+    /**
+
+* Оновлює стан прогрес-бару на основі видимої секції.
+
+* @param {NodeListOf<Element>} sections - Колекція секцій.
+
+* @param {object} progressElements - Елементи прогрес-бару.
+
+*/
+
+    updateProgressBar(sections, progressElements) {
+      if (!progressElements || sections.length === 0) return;
+
+      let activeIndex = -1;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+
+        // Секція вважається активною, якщо її центр знаходиться в центрі екрану
+
+        if (
+          rect.top <= window.innerHeight * 0.5 &&
+          rect.bottom >= window.innerHeight * 0.5
+        ) {
+          activeIndex = index;
+        }
+      });
+
+      if (activeIndex !== -1) {
+        const progress = ((activeIndex + 1) / sections.length) * 100;
+
+        progressElements.bar.style.height = `${progress}%`;
+
+        progressElements.indicator.textContent = `${activeIndex + 1} / ${sections.length}`;
+      }
+    },
+
+    // ==========================================================================
+
+    // VIDEO & INTERSECTION OBSERVER
+
+    // ==========================================================================
+
+    /**
+
+* Ініціалізує Intersection Observer для автовідтворення відео у viewport.
+
+*/
+
+    initVideoObserver() {
+      const playOnlyThis = (videoEl) => {
+        if (!videoEl) return;
+
+        this.elements.fullscreenSections.forEach((section) => {
+          const v = section.querySelector('video');
+
+          if (v && v !== videoEl) v.pause();
+        });
+
+        videoEl
+          .play()
+          .catch((error) => console.log('Autoplay was prevented:', error));
+      };
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (this.elements.body.classList.contains('preloader-active')) return;
+
+          entries.forEach((entry) => {
+            const video = entry.target.querySelector('video');
+
+            if (video) {
+              if (entry.isIntersecting && entry.intersectionRatio >= 0.75) {
+                playOnlyThis(video);
+              } else {
+                video.pause();
+              }
+            }
+          });
+        },
+        { root: null, threshold: [0.0, 0.75, 1.0] }
+      );
+
+      this.elements.fullscreenSections.forEach((section) => {
+        const video = section.querySelector('video');
+
+        if (video) {
+          // Налаштування для кращої продуктивності та сумісності
+
+          video.muted = true;
+
+          video.playsInline = true;
+
+          video.preload = 'auto';
+
+          observer.observe(section);
+        }
+      });
+    },
+
+    // ==========================================================================
+
+    // UI COMPONENTS LOGIC (TABS, BUTTONS)
+
+    // ==========================================================================
+
+    /**
+
+* Ініціалізує функціонал вкладок (табів).
+
+*/
+
+    initTabs() {
+      this.setupTabSystem('.studio-tab', '.tab-panel');
+
+      this.setupTabSystem('.login-tab', '.tab-content');
+    },
+
+    /**
+
+* Універсальна функція для налаштування системи вкладок.
+
+* @param {string} tabSelector - CSS-селектор для кнопок-вкладок.
+
+* @param {string} panelSelector - CSS-селектор для панелей контенту.
+
+*/
+
+    setupTabSystem(tabSelector, panelSelector) {
+      const tabs = document.querySelectorAll(tabSelector);
+
+      const panels = document.querySelectorAll(panelSelector);
+
+      if (tabs.length === 0) return;
+
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const targetPanelId = tab.dataset.tab;
+
+          tabs.forEach((t) => t.classList.remove('active'));
+
+          tab.classList.add('active');
+
+          panels.forEach((p) => {
+            // Для login-вкладок id панелей мають суфікс "-content"
+
+            const panelId = p.id.replace('-content', '');
+
+            p.classList.toggle('active', panelId === targetPanelId);
+          });
+        });
+      });
+    },
+
+    /**
+
+* Обробляє клік на кнопку ввімкнення/вимкнення звуку.
+
+* @param {Event} event - Подія кліку.
+
+*/
+
+    handleMuteToggle(event) {
+      const button = event.currentTarget;
+
+      const video = button
+        .closest('.video-block, .video-block-fullscreen')
+        ?.querySelector('.video-preview, video');
+
+      if (video) {
+        video.muted = !video.muted;
+
+        button.innerHTML = video.muted
+          ? '<svg viewBox="0 0 24 24"><path d="M12 3.99L7.83 8.16H4v7.68h3.83L12 20.01v-16.02zM12 1.48L6.48 7.01H2v10h4.48L12 22.52V1.48zM16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 4.45v.21c2.83.82 5 3.54 5 6.34s-2.17 5.52-5 6.34v.21c3.38-.88 6-3.96 6-7.55s-2.62-6.67-6-7.55z"/></svg>'
+          : '<svg viewBox="0 0 24 24"><path d="M3.63 3.63c-.39.39-.39 1.02 0 1.41L7.29 8.7 7 9H4v6h3l3.29 3.29c.63.63 1.71.18 1.71-.71V13.3l4.95 4.95c-.37.26-.79.46-1.25.58v1.01c.71-.21 1.38-.56 1.99-1.01l3.08 3.08c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L5.05 3.63c-.39-.39-1.02-.39-1.42 0zM19 12c0 .82-.15 1.61-.41 2.34l1.53 1.53c.63-1.09 1-2.34 1-3.87 0-4.28-2.99-7.86-7-8.77v1.06c2.9.86 5 3.54 5 6.66zM10 15.17L7.83 13H5v-2h2.83l.88-.88L10 11.41v3.76zM14 8.25v-1.1c.46.12.89.31 1.28.55l-1.28 1.28v-.73z"/></svg>';
+      }
+    },
   };
 
-  if (words.length) {
-    const lastWord = words[words.length - 1];
-    let done = false;
+  // Запускаємо додаток
 
-    lastWord.addEventListener("animationend", () => {
-      if (done) return;
-      done = true;
-      introPre.classList.add("is-done");
-    }, { once: true });
-
-    setTimeout(() => {
-      if (done) return;
-      done = true;
-      introPre.classList.add("is-done");
-    }, getMaxDelayMs());
-  } else {
-    introPre.classList.add("is-done");
-  }
-
-  introPre.addEventListener("transitionend", (e) => {
-    if (e.propertyName === "transform") {
-      introPre.remove();
-    }
-  });
-}
-
-
+  App.init();
+});

@@ -545,7 +545,7 @@ body.preloader-active .header {
    position: fixed;
   left: 0;
   right: 0;
-  top: var(--header-h);
+  top: calc(var(--header-h) - 5px);
   height: 75vh;
   background: #fff;
   color: #000;

@@ -173,24 +173,21 @@ document.addEventListener('DOMContentLoaded', () => {
 */
 
     onPreloaderFinish() {
-      this.elements.body.classList.remove('preloader-active');
+  this.elements.body.classList.remove('preloader-active');
+  this.initScrollDependentLogic();
+  this.initVideoObserver();
 
-      this.initScrollDependentLogic();
+  // Автоматично запускаємо перше відео після прелоадера
+  const firstVideo = document.querySelector(
+    '.video-block-fullscreen .video-preview' // <-- Тепер шукає перше відео у будь-якому блоці fullscreen
+  );
 
-      this.initVideoObserver();
-
-      // Автоматично запускаємо перше відео після прелоадера
-
-      const firstVideo = document.querySelector(
-        '#first-video-block .video-preview'
-      );
-
-      if (firstVideo) {
-        firstVideo
-          .play()
-          .catch((error) => console.log('Autoplay was prevented:', error));
-      }
-    },
+  if (firstVideo) {
+    firstVideo
+      .play()
+      .catch((error) => console.log('Autoplay was prevented:', error));
+  }
+},
 
     // ==========================================================================
 
@@ -219,36 +216,32 @@ document.addEventListener('DOMContentLoaded', () => {
 */
 
     setupHybridsPageScroll() {
-        const sections = document.querySelectorAll(".video-block-fullscreen, .video-block-hybrid");
-        const progressElements = this.createProgressBar(sections.length);
+    const sections = document.querySelectorAll(".video-block-fullscreen, .video-block-hybrid");
+    const progressElements = this.createProgressBar(sections.length);
 
-        const onScroll = () => {
-            const currentScroll = window.scrollY;
+    const onScroll = () => {
+        const currentScroll = window.scrollY;
 
-            // 1. Оновлення прогрес-бару
-            this.updateProgressBar(sections, progressElements);
+        // 1. Оновлення прогрес-бару
+        this.updateProgressBar(sections, progressElements);
 
-            // 2. Логіка ховання/показу хедера
-            const scrollThreshold = 200;
-            const isScrollingDown = currentScroll > this.state.lastScrollTop;
+        // 2. Логіка ховання/показу хедера
+        const scrollThreshold = 200;
+        const isScrollingDown = currentScroll > this.state.lastScrollTop;
 
-            if (this.elements.header) {
-                const shouldHide = currentScroll > scrollThreshold && isScrollingDown;
-                
-                this.elements.header.classList.toggle("header--hidden", shouldHide);
-                
-                if (this.elements.navContainer) {
-                    // Цей рядок також можна оновити або видалити...
-                    this.elements.navContainer.classList.toggle("hidden", shouldHide);
-                }
-            }
+        if (this.elements.header) {
+            const shouldHide = currentScroll > scrollThreshold && isScrollingDown;
+            
+            // Тепер керуємо лише хедером, а навігація рухатиметься разом з ним
+            this.elements.header.classList.toggle("header--hidden", shouldHide);
+        }
 
-            this.state.lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
-        };
+        this.state.lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+    };
 
-        window.addEventListener("scroll", onScroll, { passive: true });
-        onScroll(); 
-    },
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll(); // Початковий виклик для правильного стану
+},
 
     /**
 

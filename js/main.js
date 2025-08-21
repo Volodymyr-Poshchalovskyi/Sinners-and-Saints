@@ -105,66 +105,71 @@ document.addEventListener('DOMContentLoaded', () => {
 */
 
     initPreloader() {
-      const preloader = this.elements.introPreloader;
+  const preloader = this.elements.introPreloader;
 
-      if (!preloader) {
-        // Якщо прелоадера немає, одразу активуємо залежні від нього функції
+  if (!preloader) {
+    this.onPreloaderFinish();
+    return;
+  }
 
-        this.onPreloaderFinish();
+  this.elements.body.classList.add('preloader-active');
 
-        return;
+  // --- Анімація заголовка (залишається без змін) ---
+  const titleWords = preloader.querySelectorAll('.intro-preloader__title .word');
+  const TARGET_DURATION = 2500;
+  const WORD_FADE_IN_DURATION = 600;
+  const POST_ANIMATION_DELAY = 10000;
+
+  const calculateDelay = (collection) => {
+    const increment =
+      collection.length > 1
+        ? (TARGET_DURATION - WORD_FADE_IN_DURATION) / (collection.length - 1)
+        : 0;
+    collection.forEach((word, index) => {
+      word.style.animationDelay = `${index * increment}ms`;
+    });
+  };
+
+  calculateDelay(titleWords);
+
+  // --- НОВА ЛОГІКА ДРУКАРСЬКОЇ МАШИНКИ ---
+  const typewriterElement = preloader.querySelector('.anim-typewriter');
+  if (typewriterElement) {
+    const originalText = typewriterElement.textContent.trim();
+    typewriterElement.textContent = ''; // Очищуємо текст перед початком
+
+    let charIndex = 0;
+    const typingSpeed = 40; // Швидкість друкування (мс на символ)
+    const startDelay = 100; // Затримка перед початком друкування (0.1с)
+
+    setTimeout(() => {
+      const typeChar = () => {
+      if (charIndex < originalText.length) {
+        typewriterElement.textContent = originalText.substring(0, charIndex + 1) + '|'; // Додаємо курсор після кожного символу
+        charIndex++;
+        setTimeout(typeChar, typingSpeed);
+      } else {
+        // Коли друкування завершено, видаляємо курсор та додаємо клас
+        typewriterElement.textContent = originalText;
+        typewriterElement.classList.add('typing-done');
       }
+    };
+    typeChar(); // Запускаємо процес // Запускаємо процес
+    }, startDelay);
+  }
 
-      this.elements.body.classList.add('preloader-active');
+  // --- Ховаємо прелоадер (логіка залишається без змін) ---
+  setTimeout(() => {
+    preloader.classList.add('is-done');
+  }, TARGET_DURATION + POST_ANIMATION_DELAY);
 
-      const titleWords = preloader.querySelectorAll(
-        '.intro-preloader__title .word'
-      );
-
-      const subWords = preloader.querySelectorAll(
-        '.intro-preloader__sub .word'
-      );
-
-      const TARGET_DURATION = 2500; // Час на анімацію всіх слів
-
-      const WORD_FADE_IN_DURATION = 600; // Тривалість анімації одного слова
-
-      const POST_ANIMATION_DELAY = 10000; // Пауза після анімації слів
-
-      // Розрахунок затримки для слів, щоб вони з'являлись поступово
-
-      const calculateDelay = (collection) => {
-        const increment =
-          collection.length > 1
-            ? (TARGET_DURATION - WORD_FADE_IN_DURATION) /
-              (collection.length - 1)
-            : 0;
-
-        collection.forEach((word, index) => {
-          word.style.animationDelay = `${index * increment}ms`;
-        });
-      };
-
-      calculateDelay(titleWords);
-
-      calculateDelay(subWords);
-
-      // Ховаємо прелоадер після завершення всієї анімації
-
-      setTimeout(() => {
-        preloader.classList.add('is-done');
-      }, TARGET_DURATION + POST_ANIMATION_DELAY);
-
-      // Коли анімація зникнення завершилась, видаляємо прелоадер і запускаємо іншу логіку
-
-      preloader.addEventListener('transitionend', (e) => {
-        if (e.propertyName === 'transform') {
-          this.onPreloaderFinish();
-
-          preloader.remove();
-        }
-      });
-    },
+  preloader.addEventListener('transitionend', (e) => {
+    if (e.propertyName === 'transform') {
+      this.onPreloaderFinish();
+      preloader.remove();
+    }
+  });
+},
 
     /**
 

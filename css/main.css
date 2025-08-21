@@ -542,28 +542,18 @@ body.preloader-active .header {
 /* Intro preloader (white block) */
 
 .intro-preloader {
-  position: fixed;
-
+   position: fixed;
   left: 0;
-
   right: 0;
-
   top: var(--header-h);
-
   height: 75vh;
-
   background: #fff;
-
   color: #000;
-
   display: flex;
-
-  align-items: center;
-
+  align-items: flex-start; /* <-- "Прикріплюємо" блок до верху */
   justify-content: center;
-
+  padding-top: 20.5vh; /* <-- Додаємо відступ зверху для центрування */
   text-align: center;
-
   z-index: 900;
 
   overflow: hidden;
@@ -628,6 +618,58 @@ body.preloader-active .header {
 
   animation: fadeIn 0.6s forwards cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+
+
+/* ==========================================================================
+   TYPEWRITER ANIMATION FOR PRELOADER SUB
+   ========================================================================== */
+
+/* 1. Описуємо анімацію "друкування" */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    /* Розкриваємо на всю ширину тексту */
+    width: 100%;
+  }
+}
+
+/* 2. Описуємо анімацію миготіння курсора */
+@keyframes blinkTextCursor {
+  from {
+    border-right-color: rgba(0, 0, 0, 0.75);
+  }
+  to {
+    border-right-color: transparent;
+  }
+}
+
+/* ... попередній код ... */
+
+/* 3. Стилі для ефекту друкування (тепер керується через JS) */
+.intro-preloader__sub.anim-typewriter {
+  /* Залишаємо тільки курсор і дозволяємо переноси */
+  
+  
+  /* Дозволяємо тексту займати кілька рядків */
+  white-space: normal;
+  word-wrap: break-word; /* Додатково для кращого переносу */
+  
+  /* Скидаємо старі властивості */
+  display: block; /* Повертаємо до блочного елемента для кращого вирівнювання */
+  opacity: 1;
+}
+
+/* Цей клас буде додано через JS, коли друкування завершиться */
+.intro-preloader__sub.typing-done {
+  /* Зупиняємо анімацію курсора і ховаємо його */
+  animation: none;
+  border-right-color: transparent;
+}
+
+
 /* ==========================================================================
    7. HERO & VIDEO BLOCKS
    ========================================================================== */

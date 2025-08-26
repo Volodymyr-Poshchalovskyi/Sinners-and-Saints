@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
       );
       const TARGET_DURATION = 2500;
       const WORD_FADE_IN_DURATION = 600;
-      const POST_ANIMATION_DELAY = 10000;
+      const POST_ANIMATION_DELAY = 5000;
 
       const calculateDelay = (collection) => {
         const increment =
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         typewriterElement.textContent = ''; // Очищуємо для старту
 
         let charIndex = 0;
-        const typingSpeed = 40;
+        const typingSpeed = 25;
         const startDelay = 100;
 
         setTimeout(() => {
@@ -182,11 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const isScrollingDown = currentScroll > this.state.lastScrollTop;
 
         this.updateProgressBar(sections, progressElements);
-
-        if (this.elements.header) {
+        
+        // ** MODIFICATION START **
+        // Only hide the navigation container, not the entire header
+        if (this.elements.navContainer) {
           const shouldHide = currentScroll > 200 && isScrollingDown;
-          this.elements.header.classList.toggle('header--hidden', shouldHide);
+          this.elements.navContainer.classList.toggle('hidden', shouldHide);
         }
+        // ** MODIFICATION END **
 
         this.state.lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
       };

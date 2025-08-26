@@ -216,12 +216,6 @@ body.preloader-active .header {
   z-index: 1000;
 }
 
-.header--hidden {
-  opacity: 0;
-  transform: translateY(-100%);
-  pointer-events: none;
-}
-
 .logo-container {
   display: flex;
 
@@ -813,7 +807,7 @@ body.preloader-active .header {
   z-index: 1002;
   pointer-events: none;
 }
-.page-hybrids .header:hover .nav-container:not(.hidden) {
+.page-hybrids .header:hover .nav-container {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
@@ -1828,4 +1822,12 @@ body.preloader-active .header {
   .preloader-text {
     padding-top: 5rem;
   }
+}
+
+/* ==========================================================================
+   11. UTILITY CLASSES
+   ========================================================================== */
+
+   .mute-toggle {
+  display: none !important;
 }

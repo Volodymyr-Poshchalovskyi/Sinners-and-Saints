@@ -3,7 +3,7 @@
  * @description Ініціалізує всі інтерактивні елементи: прелоадер, логіку скролу,
  * відеоплеєри, вкладки та інші компоненти інтерфейсу.
  * @author Your Name/Company
- * @version 1.1.0
+ * @version 1.2.0
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,31 +12,25 @@ document.addEventListener('DOMContentLoaded', () => {
    * @description Головний об'єкт, що містить всю логіку сайту.
    */
   const App = {
-    /**
-     * @property {object} elements - Кешовані DOM-елементи для швидкого доступу.
-     */
     elements: {},
-
-    /**
-     * @property {object} state - Стан додатку, наприклад, позиція скролу.
-     */
     state: {
       lastScrollTop: 0,
     },
 
     /**
-     * Ініціалізує додаток: кешує елементи та запускає обробники.
+     * Ініціалізує додаток.
      */
     init() {
       this.cacheDomElements();
+      this.startFirstVideo(); // **ЗМІНА: Запускаємо відео одразу**
       this.initPreloader();
       this.initTabs();
-      this.initNavIndicator(); // Ініціалізуємо анімацію навігації
+      this.initNavIndicator();
       this.bindEvents();
     },
 
     /**
-     * Знаходить та зберігає посилання на всі необхідні DOM-елементи.
+     * Кешує DOM-елементи.
      */
     cacheDomElements() {
       this.elements.body = document.body;
@@ -50,25 +44,47 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     /**
-     * Прив'язує всі основні обробники подій до елементів.
+     * Прив'язує обробники подій.
      */
     bindEvents() {
-      this.elements.muteButtons.forEach((button) => {
-        // Використовуємо стрілкову функцію, щоб зберегти контекст `this`
-        button.addEventListener('click', (e) => this.handleMuteToggle(e));
-      });
+        // Кнопки звуку більше не існують, тому цей код можна видалити або залишити, якщо вони повернуться
+        // this.elements.muteButtons.forEach((button) => {
+        //   button.addEventListener('click', (e) => this.handleMuteToggle(e));
+        // });
+    },
+      
+    /**
+     * **НОВА ФУНКЦІЯ**
+     * Знаходить перше відео і намагається його відтворити.
+     */
+    startFirstVideo() {
+        const firstVideo = document.querySelector('#first-video-block .video-preview');
+        if (firstVideo) {
+            firstVideo.muted = true;
+            firstVideo.playsInline = true;
+            firstVideo.play().catch(error => {
+                console.log("Autoplay was prevented by the browser:", error);
+            });
+        }
     },
 
-    // ==========================================================================
-    // PRELOADER LOGIC
-    // ==========================================================================
-
     /**
-     * Керує анімацією та зникненням прелоадера.
+     * Керує анімацією прелоадера.
+     */
+    /**
+     * Керує анімацією прелоадера.
+     */
+    /**
+     * Керує анімацією прелоадера.
+     */
+    /**
+     * Керує анімацією прелоадера.
+     */
+    /**
+     * Керує анімацією прелоадера.
      */
     initPreloader() {
       const preloader = this.elements.introPreloader;
-
       if (!preloader) {
         this.onPreloaderFinish();
         return;
@@ -76,13 +92,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       this.elements.body.classList.add('preloader-active');
 
-      // --- Анімація заголовка (без змін) ---
-      const titleWords = preloader.querySelectorAll(
-        '.intro-preloader__title .word'
-      );
+      const titleWords = preloader.querySelectorAll('.intro-preloader__title .word');
       const TARGET_DURATION = 2500;
       const WORD_FADE_IN_DURATION = 600;
-      const POST_ANIMATION_DELAY = 5000;
+      
+      // ===================================================================
+      // **ОСЬ ЦЕЙ РЯДОК ПОТРІБНО ЗМІНИТИ**
+      // Встановлюємо затримку в 3 секунди (3000 мілісекунд)
+      const POST_ANIMATION_DELAY = 3000; 
+      // ===================================================================
 
       const calculateDelay = (collection) => {
         const increment =
@@ -93,40 +111,48 @@ document.addEventListener('DOMContentLoaded', () => {
           word.style.animationDelay = `${index * increment}ms`;
         });
       };
-
       calculateDelay(titleWords);
 
-      // --- ПОКРАЩЕНА ЛОГІКА ДРУКАРСЬКОЇ МАШИНКИ ---
       const typewriterElement = preloader.querySelector('.anim-typewriter');
       if (typewriterElement) {
         const originalText = typewriterElement.textContent.trim();
-        typewriterElement.textContent = ''; // Очищуємо для старту
+
+        const measurer = typewriterElement.cloneNode(true);
+        measurer.style.visibility = 'hidden';
+        measurer.style.position = 'absolute';
+        measurer.style.height = 'auto';
+        measurer.style.width = typewriterElement.offsetWidth + 'px';
+        measurer.textContent = originalText;
+        
+        document.body.appendChild(measurer);
+        const finalHeight = measurer.offsetHeight;
+        document.body.removeChild(measurer);
+
+        typewriterElement.style.minHeight = `${finalHeight}px`;
+        
+        typewriterElement.textContent = '';
 
         let charIndex = 0;
-        const typingSpeed = 25;
+        const typingSpeed = 40;
         const startDelay = 100;
 
         setTimeout(() => {
           const typeChar = () => {
             if (charIndex < originalText.length) {
-              typewriterElement.textContent = originalText.substring(
-                0,
-                charIndex + 1
-              );
+              typewriterElement.textContent = originalText.substring(0, charIndex + 1);
               charIndex++;
               setTimeout(typeChar, typingSpeed);
             } else {
               typewriterElement.classList.add('typing-done');
+              // Тепер цей таймер буде використовувати правильну затримку в 3 секунди
+              setTimeout(() => {
+                preloader.classList.add('is-done');
+              }, POST_ANIMATION_DELAY);
             }
           };
           typeChar();
         }, startDelay);
       }
-
-      // --- Ховаємо прелоадер (без змін) ---
-      setTimeout(() => {
-        preloader.classList.add('is-done');
-      }, TARGET_DURATION + POST_ANIMATION_DELAY);
 
       preloader.addEventListener('transitionend', (e) => {
         if (e.propertyName === 'transform') {
@@ -143,24 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
       this.elements.body.classList.remove('preloader-active');
       this.initScrollDependentLogic();
       this.initVideoObserver();
-
-      const firstVideo = document.querySelector(
-        '.video-block-fullscreen .video-preview'
-      );
-      if (firstVideo) {
-        firstVideo.muted = true; // Важливо для автозапуску
-        firstVideo
-          .play()
-          .catch((error) => console.log('Autoplay was prevented:', error));
-      }
+      // **ЗМІНА: Логіку запуску першого відео звідси видалено**
     },
 
-    // ==========================================================================
-    // SCROLL-DEPENDENT LOGIC
-    // ==========================================================================
-
     /**
-     * Ініціалізує всю логіку, яка залежить від прокрутки сторінки.
+     * Ініціалізує логіку, що залежить від скролу.
      */
     initScrollDependentLogic() {
       if (this.elements.body.classList.contains('page-hybrids')) {
@@ -169,28 +182,20 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     /**
-     * Налаштовує специфічну логіку скролу для сторінки "Hybrids".
+     * Налаштовує логіку скролу для сторінки "Hybrids".
      */
     setupHybridsPageScroll() {
-      const sections = document.querySelectorAll(
-        '.video-block-fullscreen, .video-block-hybrid'
-      );
+      const sections = document.querySelectorAll('.video-block-fullscreen, .video-block-hybrid');
       const progressElements = this.createProgressBar(sections.length);
 
       const onScroll = () => {
         const currentScroll = window.scrollY;
         const isScrollingDown = currentScroll > this.state.lastScrollTop;
-
         this.updateProgressBar(sections, progressElements);
-        
-        // ** MODIFICATION START **
-        // Only hide the navigation container, not the entire header
         if (this.elements.navContainer) {
           const shouldHide = currentScroll > 200 && isScrollingDown;
           this.elements.navContainer.classList.toggle('hidden', shouldHide);
         }
-        // ** MODIFICATION END **
-
         this.state.lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
       };
 
@@ -199,77 +204,54 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     /**
-     * Створює та додає на сторінку елементи прогрес-бару.
+     * Створює прогрес-бар.
      */
     createProgressBar(totalSections) {
       if (totalSections <= 0) return null;
-
       const container = document.createElement('div');
       container.className = 'video-progress';
-
       const bar = document.createElement('div');
       bar.className = 'video-progress-bar';
-
       const indicator = document.createElement('div');
       indicator.className = 'video-progress-indicator';
       indicator.textContent = `1 / ${totalSections}`;
-
       container.append(bar, indicator);
       this.elements.body.appendChild(container);
 
-      // Логіка кліку по прогрес-бару
       container.addEventListener('click', (e) => {
         const rect = container.getBoundingClientRect();
         const clickY = e.clientY - rect.top;
         const percentage = clickY / rect.height;
         const targetIndex = Math.floor(percentage * totalSections);
-        const sections = document.querySelectorAll(
-          '.video-block-fullscreen, .video-block-hybrid'
-        );
-
+        const sections = document.querySelectorAll('.video-block-fullscreen, .video-block-hybrid');
         if (sections[targetIndex]) {
-          window.scrollTo({
-            top: sections[targetIndex].offsetTop,
-            behavior: 'smooth',
-          });
+          window.scrollTo({ top: sections[targetIndex].offsetTop, behavior: 'smooth' });
         }
       });
-
       return { bar, indicator };
     },
 
     /**
-     * Оновлює стан прогрес-бару на основі видимої секції.
+     * Оновлює прогрес-бар.
      */
     updateProgressBar(sections, progressElements) {
       if (!progressElements || sections.length === 0) return;
-
       let activeIndex = -1;
       sections.forEach((section, index) => {
         const rect = section.getBoundingClientRect();
-        if (
-          rect.top <= window.innerHeight * 0.5 &&
-          rect.bottom >= window.innerHeight * 0.5
-        ) {
+        if (rect.top <= window.innerHeight * 0.5 && rect.bottom >= window.innerHeight * 0.5) {
           activeIndex = index;
         }
       });
-
       if (activeIndex !== -1) {
         const progress = ((activeIndex + 1) / sections.length) * 100;
         progressElements.bar.style.height = `${progress}%`;
-        progressElements.indicator.textContent = `${activeIndex + 1} / ${
-          sections.length
-        }`;
+        progressElements.indicator.textContent = `${activeIndex + 1} / ${sections.length}`;
       }
     },
 
-    // ==========================================================================
-    // VIDEO & INTERSECTION OBSERVER
-    // ==========================================================================
-
     /**
-     * Ініціалізує Intersection Observer для автовідтворення відео.
+     * Ініціалізує Intersection Observer для відео.
      */
     initVideoObserver() {
       const playOnlyThis = (videoEl) => {
@@ -277,15 +259,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('video').forEach((v) => {
           if (v !== videoEl) v.pause();
         });
-        videoEl
-          .play()
-          .catch((error) => console.log('Autoplay was prevented:', error));
+        videoEl.play().catch((error) => console.log('Autoplay was prevented:', error));
       };
 
       const observer = new IntersectionObserver(
         (entries) => {
           if (this.elements.body.classList.contains('preloader-active')) return;
-
           entries.forEach((entry) => {
             const video = entry.target.querySelector('video');
             if (video) {
@@ -311,12 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     },
 
-    // ==========================================================================
-    // UI COMPONENTS LOGIC
-    // ==========================================================================
-
     /**
-     * Ініціалізує функціонал вкладок (табів).
+     * Ініціалізує функціонал вкладок.
      */
     initTabs() {
       this.setupTabSystem('.studio-tab', '.tab-panel');
@@ -329,9 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupTabSystem(tabSelector, panelSelector) {
       const tabs = document.querySelectorAll(tabSelector);
       const panels = document.querySelectorAll(panelSelector);
-
       if (tabs.length === 0) return;
-
       tabs.forEach((tab) => {
         tab.addEventListener('click', () => {
           const targetPanelId = tab.dataset.tab;
@@ -345,32 +318,13 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     /**
-     * Обробляє клік на кнопку ввімкнення/вимкнення звуку.
-     */
-    handleMuteToggle(event) {
-      const button = event.currentTarget;
-      const video = button
-        .closest('.video-block, .video-block-fullscreen')
-        ?.querySelector('video');
-
-      if (video) {
-        video.muted = !video.muted;
-        button.innerHTML = video.muted
-          ? '🔈' // Іконка "без звуку"
-          : '🔊'; // Іконка "зі звуком"
-      }
-    },
-
-    /**
      * Ініціалізує анімацію індикатора в навігації.
      */
     initNavIndicator() {
       const nav = document.querySelector('.nav');
       if (!nav) return;
-
       const navLinks = nav.querySelectorAll('ul a');
       const indicator = nav.querySelector('.nav-indicator');
-
       if (!navLinks.length || !indicator) return;
 
       navLinks.forEach((link) => {

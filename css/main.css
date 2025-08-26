@@ -190,17 +190,15 @@ li {
    5. SITE HEADER & NAVIGATION
    ========================================================================== */
 
-/* Додано .nav-container до селектора */
-body.preloader-active .header,
+/* Знайдіть це правило і переконайтесь, що воно має білий фон */
+body.preloader-active .logo-container,
 body.preloader-active .nav-container {
-  transform: translateY(0) !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
+  background-color: #ffffff;
 }
 
-/* Окреме правило для фону хедера, щоб не впливати на навігацію */
-body.preloader-active .header {
-  background-color: #ffffff;
+/* Новий клас, який зробить фон хедера прозорим */
+.header--transparent .logo-container {
+  background-color: transparent !important; /* !important гарантує, що стиль буде застосовано */
 }
 
 
@@ -252,16 +250,14 @@ body.preloader-active .header {
 
 .nav-container {
   display: flex;
-
   justify-content: center;
-
   align-items: center;
-
   background: #ffffff;
-
+  /* Додано background-color до transition */
   transition:
     opacity 0.3s ease,
-    transform 0.3s ease;
+    transform 0.3s ease,
+    background-color 0.3s ease;
 }
 
 .nav-container.hidden {
@@ -533,16 +529,13 @@ body.preloader-active .header {
   animation-delay: 4.4s;
 }
 
-/* Intro preloader (white block) */
+/* Загальний стиль для обох банерів */
 .intro-preloader {
   position: fixed;
-  right: 15px;
-  left: auto;
   width: 20vw;
-  top: calc(var(--header-h) + 15px);
-  height: calc(100vh - var(--header-h) - 30px);
-  
-  background: #fff;
+  /* top та height тепер встановлюються динамічно через JS */
+  /* ЗМІНЕНО: Фон тепер білий з 60% непрозорості (можна налаштувати) */
+  background: rgba(255, 255, 255, 0.6); /* Змініть 0.6 на потрібний рівень прозорості (0.1 - 0.9) */
   color: #000;
   display: flex;
   align-items: center;
@@ -555,16 +548,27 @@ body.preloader-active .header {
     transform 1.5s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 1.5s ease-out;
   will-change: transform, opacity;
-
   /* =============================================================== */
-  /* НОВИЙ СПОСІБ: Дві внутрішні тіні для створення рамки з відступом */
-  /* Перша тінь (біла) створює відступ в 3px */
-  /* Друга тінь (чорна) створює саму рамку товщиною 4px */
-  box-shadow: inset 0 0 0 3px #fff, 
-              inset 0 0 0 7px #000;
-  /* =============================================================== */
+  /* НОВИЙ СПОСІБ: Три внутрішні тіні для рамки з білим відступом та напівпрозорим фоном */
+  /* 1. Перша тінь: Створює прозорий відступ 7px від краю елемента.
+        Її розмір дорівнює розміру чорної рамки + білого відступу. */
+ box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.6),  /* так само прозорий як фон */
+            inset 0 0 0 7px #000;
 }
 
+/* Позиціонування для лівого банера */
+.intro-preloader--left {
+  left: 15px;
+  right: auto;
+}
+
+/* Позиціонування для правого банера */
+.intro-preloader--right {
+  right: 15px;
+  left: auto;
+}
+
+/* Стилі для анімації зникнення (залишаються без змін) */
 .intro-preloader.is-done {
   transform: translateY(-100%);
   opacity: 0;
@@ -589,14 +593,19 @@ body.preloader-active .header {
   color: #000;
 }
 
+
+
 .intro-preloader__sub {
   margin: 0 auto;
   max-width: 62ch;
-  line-height: 1.55;
   color: #000;
-  font-family: 'helvetica', Arial, sans-serif;
-  /* Змінено: зменшуємо розмір шрифту підпису */
-  font-size: clamp(0.8rem, 1vw, 0.9rem);
+  /* ЗМІНЕНО: Розмір шрифту синхронізовано з тайтлом і зменшено */
+  font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-family: inherit; 
 }
 
 .intro-preloader .word {
@@ -810,12 +819,11 @@ body.preloader-active .header {
   pointer-events: auto;
 }
 
-.page-hybrids .header:hover .logo-container:not(.logo-hidden) {
-  background-color: white;
-  opacity: 1;
-  transform: translateY(0);
+/* Виправлене правило для синхронізації фону хедера при наведенні */
+.page-hybrids .header:hover .logo-container,
+.page-hybrids .header:hover .nav-container {
+  background-color: #ffffff !important; /* Додано !important */
 }
-
 .page-hybrids .nav-container.hidden,
 .page-hybrids .logo-container.logo-hidden,
 .page-hybrids .login-icon.logo-hidden {

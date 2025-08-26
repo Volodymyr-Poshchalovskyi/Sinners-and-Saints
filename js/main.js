@@ -3,7 +3,7 @@
  * @description Ініціалізує всі інтерактивні елементи: прелоадер, логіку скролу,
  * відеоплеєри, вкладки та інші компоненти інтерфейсу.
  * @author Your Name/Company
- * @version 1.2.0
+ * @version 2.0.0
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     init() {
       this.cacheDomElements();
-      this.startFirstVideo(); // **ЗМІНА: Запускаємо відео одразу**
+      this.positionPreloader(); 
+      this.startFirstVideo();
       this.initPreloader();
       this.initTabs();
       this.initNavIndicator();
@@ -36,25 +37,33 @@ document.addEventListener('DOMContentLoaded', () => {
       this.elements.body = document.body;
       this.elements.header = document.querySelector('.header');
       this.elements.navContainer = document.querySelector('.nav-container');
-      this.elements.introPreloader = document.querySelector('.intro-preloader');
+      // **ЗМІНА: Тепер шукаємо всі прелоадери**
+      this.elements.introPreloaders = document.querySelectorAll('.intro-preloader');
       this.elements.fullscreenSections = document.querySelectorAll(
         '.video-block-fullscreen'
       );
-      this.elements.muteButtons = document.querySelectorAll('.mute-toggle');
     },
 
-    /**
-     * Прив'язує обробники подій.
-     */
     bindEvents() {
-        // Кнопки звуку більше не існують, тому цей код можна видалити або залишити, якщо вони повернуться
-        // this.elements.muteButtons.forEach((button) => {
-        //   button.addEventListener('click', (e) => this.handleMuteToggle(e));
-        // });
+      // Код для обробників подій (якщо є)
     },
       
     /**
-     * **НОВА ФУНКЦІЯ**
+     * Динамічно позиціонує прелоадери точно під хедером.
+     */
+   positionPreloader() {
+        if (this.elements.header && this.elements.introPreloaders.length) {
+            const headerHeight = this.elements.header.offsetHeight;
+            this.elements.introPreloaders.forEach(preloader => {
+                // ЗМІНА: Додаємо 15px до висоти хедера для верхнього відступу
+                preloader.style.top = `${headerHeight + 15}px`;
+                // ЗМІНА: Віднімаємо 30px (15px зверху + 15px знизу) від загальної висоти
+                preloader.style.height = `calc(100vh - ${headerHeight}px - 30px)`;
+            });
+        }
+    },
+
+    /**
      * Знаходить перше відео і намагається його відтворити.
      */
     startFirstVideo() {
@@ -69,125 +78,124 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     /**
-     * Керує анімацією прелоадера.
+     * Керує анімацією прелоадерів.
      */
     /**
-     * Керує анімацією прелоадера.
+     * Керує анімацією прелоадерів.
      */
     /**
-     * Керує анімацією прелоадера.
-     */
-    /**
-     * Керує анімацією прелоадера.
-     */
-    /**
-     * Керує анімацією прелоадера.
+     * Керує анімацією прелоадерів.
      */
     initPreloader() {
-      const preloader = this.elements.introPreloader;
-      if (!preloader) {
+      const leftPreloader = document.querySelector('.intro-preloader--left');
+      const rightPreloader = document.querySelector('.intro-preloader--right');
+      const allPreloaders = this.elements.introPreloaders;
+
+      if (!allPreloaders.length) {
         this.onPreloaderFinish();
         return;
       }
 
       this.elements.body.classList.add('preloader-active');
-
-      const titleWords = preloader.querySelectorAll('.intro-preloader__title .word');
-      const TARGET_DURATION = 2500;
-      const WORD_FADE_IN_DURATION = 600;
       
-      // ===================================================================
-      // **ОСЬ ЦЕЙ РЯДОК ПОТРІБНО ЗМІНИТИ**
-      // Встановлюємо затримку в 3 секунди (3000 мілісекунд)
-      const POST_ANIMATION_DELAY = 3000; 
-      // ===================================================================
+      // =========================================================
+      // **ОНОВЛЕНИЙ КОД**
+      // Запускаємо таймер на 5 секунд, після якого хедер стане прозорим
+      setTimeout(() => {
+        this.elements.header.classList.add('header--transparent');
+      }, 5000);
+      // =========================================================
+      
+      // Анімація тайтлу (тільки для лівого банера)
+      if (leftPreloader) {
+        const titleWords = leftPreloader.querySelectorAll('.intro-preloader__title .word');
+        const TARGET_DURATION = 2500;
+        const WORD_FADE_IN_DURATION = 600;
+        const calculateDelay = (collection) => {
+            const increment =
+            collection.length > 1
+                ? (TARGET_DURATION - WORD_FADE_IN_DURATION) / (collection.length - 1)
+                : 0;
+            collection.forEach((word, index) => {
+                word.style.animationDelay = `${index * increment}ms`;
+            });
+        };
+        calculateDelay(titleWords);
+      }
+      
+      // Анімація підпису (тільки для правого банера)
+      if (rightPreloader) {
+        const typewriterElement = rightPreloader.querySelector('.anim-typewriter');
+        if (typewriterElement) {
+            const originalText = typewriterElement.textContent.trim();
+            const POST_ANIMATION_DELAY = 3000;
 
-      const calculateDelay = (collection) => {
-        const increment =
-          collection.length > 1
-            ? (TARGET_DURATION - WORD_FADE_IN_DURATION) / (collection.length - 1)
-            : 0;
-        collection.forEach((word, index) => {
-          word.style.animationDelay = `${index * increment}ms`;
-        });
-      };
-      calculateDelay(titleWords);
+            const measurer = typewriterElement.cloneNode(true);
+            measurer.style.visibility = 'hidden';
+            measurer.style.position = 'absolute';
+            measurer.style.height = 'auto';
+            measurer.style.width = typewriterElement.offsetWidth + 'px';
+            measurer.textContent = originalText;
+            
+            document.body.appendChild(measurer);
+            const finalHeight = measurer.offsetHeight;
+            document.body.removeChild(measurer);
 
-      const typewriterElement = preloader.querySelector('.anim-typewriter');
-      if (typewriterElement) {
-        const originalText = typewriterElement.textContent.trim();
+            typewriterElement.style.minHeight = `${finalHeight}px`;
+            typewriterElement.textContent = '';
 
-        const measurer = typewriterElement.cloneNode(true);
-        measurer.style.visibility = 'hidden';
-        measurer.style.position = 'absolute';
-        measurer.style.height = 'auto';
-        measurer.style.width = typewriterElement.offsetWidth + 'px';
-        measurer.textContent = originalText;
-        
-        document.body.appendChild(measurer);
-        const finalHeight = measurer.offsetHeight;
-        document.body.removeChild(measurer);
+            let charIndex = 0;
+            const typingSpeed = 40;
+            const startDelay = 100;
 
-        typewriterElement.style.minHeight = `${finalHeight}px`;
-        
-        typewriterElement.textContent = '';
-
-        let charIndex = 0;
-        const typingSpeed = 40;
-        const startDelay = 100;
-
-        setTimeout(() => {
-          const typeChar = () => {
-            if (charIndex < originalText.length) {
-              typewriterElement.textContent = originalText.substring(0, charIndex + 1);
-              charIndex++;
-              setTimeout(typeChar, typingSpeed);
-            } else {
-              typewriterElement.classList.add('typing-done');
-              // Тепер цей таймер буде використовувати правильну затримку в 3 секунди
-              setTimeout(() => {
-                preloader.classList.add('is-done');
-              }, POST_ANIMATION_DELAY);
-            }
-          };
-          typeChar();
-        }, startDelay);
+            setTimeout(() => {
+            const typeChar = () => {
+                if (charIndex < originalText.length) {
+                typewriterElement.textContent = originalText.substring(0, charIndex + 1);
+                charIndex++;
+                setTimeout(typeChar, typingSpeed);
+                } else {
+                typewriterElement.classList.add('done-typing');
+                setTimeout(() => {
+                    allPreloaders.forEach(p => p.classList.add('is-done'));
+                }, POST_ANIMATION_DELAY);
+                }
+            };
+            typeChar();
+            }, startDelay);
+        }
       }
 
-      preloader.addEventListener('transitionend', (e) => {
-        if (e.propertyName === 'transform') {
-          this.onPreloaderFinish();
-          preloader.remove();
-        }
+      // Обробник зникнення для обох банерів
+      let isFinished = false;
+      allPreloaders.forEach(preloader => {
+        preloader.addEventListener('transitionend', (e) => {
+            if (e.propertyName === 'transform' && !isFinished) {
+                isFinished = true; // Запобігаємо подвійному спрацюванню
+                this.onPreloaderFinish();
+                allPreloaders.forEach(p => p.remove());
+            }
+        });
       });
     },
 
-    /**
-     * Виконується після зникнення прелоадера.
-     */
+      
+
     onPreloaderFinish() {
       this.elements.body.classList.remove('preloader-active');
       this.initScrollDependentLogic();
       this.initVideoObserver();
-      // **ЗМІНА: Логіку запуску першого відео звідси видалено**
     },
 
-    /**
-     * Ініціалізує логіку, що залежить від скролу.
-     */
     initScrollDependentLogic() {
       if (this.elements.body.classList.contains('page-hybrids')) {
         this.setupHybridsPageScroll();
       }
     },
 
-    /**
-     * Налаштовує логіку скролу для сторінки "Hybrids".
-     */
     setupHybridsPageScroll() {
       const sections = document.querySelectorAll('.video-block-fullscreen, .video-block-hybrid');
       const progressElements = this.createProgressBar(sections.length);
-
       const onScroll = () => {
         const currentScroll = window.scrollY;
         const isScrollingDown = currentScroll > this.state.lastScrollTop;
@@ -198,14 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         this.state.lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
       };
-
       window.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
     },
 
-    /**
-     * Створює прогрес-бар.
-     */
     createProgressBar(totalSections) {
       if (totalSections <= 0) return null;
       const container = document.createElement('div');
@@ -217,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
       indicator.textContent = `1 / ${totalSections}`;
       container.append(bar, indicator);
       this.elements.body.appendChild(container);
-
       container.addEventListener('click', (e) => {
         const rect = container.getBoundingClientRect();
         const clickY = e.clientY - rect.top;
@@ -231,9 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return { bar, indicator };
     },
 
-    /**
-     * Оновлює прогрес-бар.
-     */
     updateProgressBar(sections, progressElements) {
       if (!progressElements || sections.length === 0) return;
       let activeIndex = -1;
@@ -250,9 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
-    /**
-     * Ініціалізує Intersection Observer для відео.
-     */
     initVideoObserver() {
       const playOnlyThis = (videoEl) => {
         if (!videoEl) return;
@@ -261,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         videoEl.play().catch((error) => console.log('Autoplay was prevented:', error));
       };
-
       const observer = new IntersectionObserver(
         (entries) => {
           if (this.elements.body.classList.contains('preloader-active')) return;
@@ -278,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         { threshold: 0.75 }
       );
-
       this.elements.fullscreenSections.forEach((section) => {
         const video = section.querySelector('video');
         if (video) {
@@ -290,17 +285,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     },
 
-    /**
-     * Ініціалізує функціонал вкладок.
-     */
     initTabs() {
       this.setupTabSystem('.studio-tab', '.tab-panel');
       this.setupTabSystem('.login-tab', '.tab-content');
     },
 
-    /**
-     * Універсальна функція для налаштування системи вкладок.
-     */
     setupTabSystem(tabSelector, panelSelector) {
       const tabs = document.querySelectorAll(tabSelector);
       const panels = document.querySelectorAll(panelSelector);
@@ -317,16 +306,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     },
 
-    /**
-     * Ініціалізує анімацію індикатора в навігації.
-     */
     initNavIndicator() {
       const nav = document.querySelector('.nav');
       if (!nav) return;
       const navLinks = nav.querySelectorAll('ul a');
       const indicator = nav.querySelector('.nav-indicator');
       if (!navLinks.length || !indicator) return;
-
       navLinks.forEach((link) => {
         link.addEventListener('mouseenter', (e) => {
           const target = e.currentTarget;
@@ -335,7 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
           indicator.classList.add('active');
         });
       });
-
       nav.addEventListener('mouseleave', () => {
         indicator.classList.remove('active');
       });
